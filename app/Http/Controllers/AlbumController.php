@@ -2,64 +2,69 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Album;
+use App\Http\Requests\AlbumRequest;
 use Illuminate\Http\Request;
+use App\Models\Album;
 
-class AlbumController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+class AlbumController extends Controller {
+    public function index() {
+        $albums = Album::all();
+        return view('albums.index', compact('albums'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
-    {
-        //
+{
+    $request->validate([
+        'name' => 'required|unique:albums,name',
+        'deskripsi' => 'nullable|string',
+    ], [
+        'name.required' => 'Nama album wajib diisi.',
+        'name.unique' => 'Nama album sudah ada. Silakan gunakan nama lain.',
+    ]);
+
+    Album::create([
+        'name' => $request->name,
+        'deskripsi' => $request->deskripsi,
+    ]);
+
+    return redirect()->route('albums.index')->with('success', 'Album berhasil ditambahkan!');
+}
+
+
+    public function edit(Album $album) {
+        return view('albums.edit', compact('album'));
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Album $album)
-    {
-        //
+    public function update(Request $request, $id)
+{
+    $album = Album::findOrFail($id);
+
+    $request->validate([
+        'name' => 'required|unique:albums,name,' . $album->id,
+        'deskripsi' => 'nullable|string',
+    ], [
+        'name.required' => 'Nama album wajib diisi.',
+        'name.unique' => 'Nama album sudah ada. Silakan gunakan nama lain.',
+    ]);
+
+    $album->update([
+        'name' => $request->name,
+        'deskripsi' => $request->deskripsi,
+    ]);
+
+    return redirect()->route('albums.index')->with('success', 'Album berhasil diperbarui!');
+}
+
+
+    public function destroy(Album $album) {
+        $album->delete();
+        return redirect()->route('albums.index')->with('success', 'Album berhasil dihapus!');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Album $album)
+    public function show($id)
     {
-        //
+        $album = Album::findOrFail($id); // Mencari album berdasarkan ID, jika tidak ditemukan akan menghasilkan 404
+        return view('albums.show', compact('album'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Album $album)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Album $album)
-    {
-        //
-    }
 }
